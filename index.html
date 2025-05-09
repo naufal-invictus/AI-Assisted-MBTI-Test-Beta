@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Assisted MBTI Test (Beta)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#172554',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <div id="disclaimer-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-3xl max-h-[90vh] overflow-y-auto mx-4">
+            <div class="p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-primary-800 mb-6">Tentang Tes MBTI Berbasis AI (Beta)</h2>
+                
+                
+                <div class="mb-6 pb-6 border-b border-gray-200">
+                    <h3 class="text-xl font-semibold text-primary-700 mb-3">Tentang Tes MBTI Berbasis AI</h3>
+                    <p class="mb-3">Tes ini menggunakan kecerdasan buatan untuk menganalisis jawaban naratif Anda, berbeda dengan tes MBTI tradisional yang menggunakan pertanyaan pilihan ganda, (Mengingat ini  masih dalam tahap beta, mungkin ada variasi dengan interpretasi lain.)</p>
+                    
+                    <h4 class="text-lg font-medium text-primary-700 mt-4 mb-2">Kelebihan:</h4>
+                    <ul class="list-disc ml-6 space-y-2">
+                        <li>Transparan, Hasil bisa dilacak langsung dari jawaban</li>
+                        <li>Analisis berdasarkan jawaban naratif Anda</li>
+                        <li>Dapat menangkap nuansa dan konteks yang tidak tertangkap dalam tes pilihan ganda</li>
+                        <li>Memungkinkan ekspresi diri yang lebih bebas dan otentik</li>
+                        <li>Dapat memberikan wawasan yang lebih mendalam tentang pola pikir dan perilaku</li>
+                    </ul>
+                    
+                    <h4 class="text-lg font-medium text-primary-700 mt-4 mb-2">Keterbatasan:</h4>
+                    <ul class="list-disc ml-6 space-y-2">
+                        <li>AI memiliki bias dan keterbatasan dalam interpretasi bahasa</li>
+                        <li>Kualitas analisis sangat bergantung pada struktur dan kejujuran jawaban Anda</li>
+                        <li>Hasil dapat bervariasi tergantung pada model AI yang digunakan</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-primary-700 mb-3">Rekomendasi untuk Jawaban Efektif</h3>
+                    <p class="mb-3">Untuk mendapatkan hasil yang paling akurat, ikuti panduan ini saat menjawab:</p>
+                    <ul class="list-disc ml-6 space-y-2">
+                        <li><strong>Gunakan Bahasa Jelas & Spesifik:</strong> Hindari kalimat terlalu umum</li>
+                        <li><strong>Detail & komprehensif:</strong> Berikan jawaban lengkap (minimal 3-5 kalimat per pertanyaan)</li>
+                        <li><strong>Hindari jargon MBTI:</strong> Jangan gunakan istilah MBTI dalam jawaban Anda untuk menghindari bias</li>
+                        <li><strong>Konteks beragam:</strong> Pertimbangkan perilaku Anda di berbagai situasi (kerja, rumah, sosial)</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-primary-50 p-4 rounded-md border-l-4 border-primary-500 mb-6">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="consent-check" class="mt-1 mr-3">
+                        <label for="consent-check" class="text-sm md:text-base">
+                            Paham?
+                        </label>
+                    </div>
+                </div>
+                
+                <button id="start-test-btn" disabled class="w-full py-3 px-4 bg-gray-300 text-gray-500 rounded-md font-medium cursor-not-allowed transition duration-200">Mulai Tes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container max-w-3xl mx-auto px-4 py-8 hidden" id="main-content">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-primary-800 mb-2">AI-Assisted MBTI Test </h1>
+            <p class="text-gray-600">Refleksikan diri Anda melalui pertanyaan ini untuk menggambarkan diri anda</p>
+        </header>
+
+        <main>
+            <section id="questions-section" class="bg-white rounded-lg shadow-md p-6">
+                <div class="mb-6">
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div id="progress-fill" class="bg-primary-600 h-2 rounded-full" style="width: 6.66%"></div>
+                    </div>
+                    <div id="question-counter" class="text-center text-sm text-gray-600">Pertanyaan 1 dari 15 - Bagian A</div>
+                </div>
+                
+                <div id="question-carousel" class="min-h-[150px] mb-6 p-5 bg-primary-50 rounded-md border-l-4 border-primary-500">
+
+
+                </div>
+
+                <div class="mb-6">
+                    <div class="mb-4">
+                        <button id="toggle-tips-btn" class="text-primary-600 border border-primary-600 hover:bg-primary-50 font-medium py-2 px-4 rounded-md text-sm transition duration-200">Lihat Tips Menjawab</button>
+                        <div id="tips-content" class="hidden mt-3 p-4 bg-gray-50 rounded-md border-l-4 border-primary-400">
+                            <h4 class="font-medium mb-2">Tips Menjawab Efektif:</h4>
+                            <ul class="list-disc ml-5 text-sm space-y-1">
+                                <li>Tulis minimal 10-50 kata yang menjelaskan pemikiran dan perasaan Anda</li>
+                                <li>Jelaskan alasan atau motivasi di balik preferensi atau perilaku Anda</li>
+                                <li>Pertimbangkan bagaimana Anda bertindak di berbagai situasi berbeda</li>
+                                <li>Gunakan bahasa yang mudah untuk dipahami</li>
+                                <li>Jujur pada diri sendiri, bukan jawaban yang "terdengar baik"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <textarea id="current-answer" class="w-full min-h-[200px] p-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y" placeholder=""></textarea>
+                        <div id="char-counter" class="absolute bottom-3 right-3 text-sm text-gray-500">0 karakter</div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 mt-4">
+                        <button id="prev-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed" disabled>Sebelumnya</button>
+                        <button id="next-btn" class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex-grow">Selanjutnya</button>
+                        <button id="submit-btn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 flex-grow hidden">Buat Analisis</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="results-section" class="hidden mt-8">
+                <h2 class="text-2xl font-bold text-primary-800 mb-6 pb-2 border-b border-gray-200">Hasil Analisis Anda</h2>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-primary-700 mb-4">Jawaban Anda</h3>
+                    <div id="user-answers" class="bg-gray-50 p-4 rounded-md max-h-[400px] overflow-y-auto"></div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-primary-700">Prompt Analisis AI</h3>
+                        <button id="copy-btn" class="p-2 text-primary-600 hover:bg-primary-50 rounded-md transition" title="Copy to clipboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="ai-prompt" class="bg-gray-50 p-4 rounded-md max-h-[400px] overflow-y-auto whitespace-pre-wrap"></div>
+                </div>
+                
+                <div class="bg-amber-50 p-4 rounded-md border-l-4 border-amber-500 mb-6">
+                    <p class="text-sm md:text-base"><strong>Pengingat:</strong> Hasil analisis MBTI ini bersifat AI Generated. Gunakan sebagai alat refleksi diri.</p>
+                </div>
+                
+                <button id="reset-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-md transition duration-200 mx-auto block">Mulai Ulang</button>
+            </section>
+        </main>
+
+        <footer class="mt-12 text-center text-gray-600 text-sm">
+            <p>Alat ini dirancang untuk refleksi diri mendalam dan pengembangan pribadi. Prompt yang dihasilkan dapat digunakan dengan model AI eksternal seperti ChatGPT atau Claude.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const questions = [
+                {
+                    main: "Bagaimana kamu merespons situasi sosial yang melibatkan banyak orang yang tidak kamu kenal?",
+                    sub: "Pikirkan tentang acara networking, pesta besar, atau pertemuan kelompok baru. Bagaimana perasaan dan tindakanmu sebelum, selama, dan setelah acara tersebut?",
+                    followUp: "Mengapa kamu merasa dan bertindak seperti itu? Pengalaman masa lalu apa yang mungkin membentuk responmu terhadap situasi sosial?",
+                    exampleMain: "Saya biasanya merasa cemas sebelum acara sosial besar. Saat berada di acara, saya cenderung mencari satu atau dua orang untuk berbicara secara mendalam daripada berinteraksi dengan banyak orang. Setelah beberapa jam, saya merasa lelah dan butuh waktu sendiri untuk mengisi ulang energi. Saya lebih nyaman dalam kelompok kecil dengan percakapan bermakna.",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Ketika menghadapi masalah kompleks, bagaimana proses mentalmu dalam mencari solusi?",
+                    sub: "Apakah kamu lebih suka menganalisis detail spesifik dan fakta konkret, atau mencari pola dan kemungkinan yang lebih luas? Misalnya, saat merencanakan proyek besar atau memecahkan masalah di tempat kerja.",
+                    followUp: "Apa yang membuatmu nyaman dengan pendekatan ini? Bisakah kamu mengingat saat pendekatan ini sangat berhasil atau justru tidak efektif bagimu?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu mengevaluasi keputusan penting dalam hidupmu?",
+                    sub: "Saat memilih karir, hubungan, atau tempat tinggal, apa faktor utama yang memengaruhi keputusanmu? Apakah kamu lebih memprioritaskan logika dan analisis objektif, atau nilai personal dan dampak pada orang lain?",
+                    followUp: "Bagaimana proses pengambilan keputusan ini berkembang dalam hidupmu? Apakah ada momen penting yang mengubah caramu mengevaluasi pilihan?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu merespons perubahan mendadak dalam rencana atau rutinitas?",
+                    sub: "Bayangkan jadwalmu yang sudah teratur tiba-tiba harus berubah, atau rencana yang sudah lama kamu siapkan dibatalkan. Apa reaksi internalmu dan bagaimana kamu beradaptasi?",
+                    followUp: "Mengapa kamu merasa seperti itu terhadap perubahan? Bagaimana pengalamanmu dengan ketidakpastian membentuk responmu saat ini?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu memproses dan mengekspresikan emosi yang kuat?",
+                    sub: "Saat mengalami kegembiraan besar, kekecewaan, atau kemarahan, bagaimana kamu mengenali, memahami, dan mengekspresikan perasaan tersebut? Apakah kamu lebih suka memproses sendiri atau berbagi dengan orang lain?",
+                    followUp: "Apa yang membuatmu memilih cara ini untuk mengelola emosi? Adakah pengalaman formatif yang memengaruhi bagaimana kamu berhubungan dengan perasaanmu?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu merespons konflik interpersonal?",
+                    sub: "Saat terjadi ketidaksepakatan atau konflik dengan teman, keluarga, atau kolega, apa pendekatan naturalmu? Apakah kamu menghadapinya langsung, mencari kompromi, atau cenderung menghindar?",
+                    followUp: "Mengapa strategi ini menjadi pilihan defaultmu? Bagaimana pengalaman konflik di masa lalu membentuk pendekatanmu saat ini?",
+                    exampleMain: "Saya cenderung menghindari konfrontasi langsung pada awalnya, lebih memilih untuk memikirkan situasi tersebut dan memahami perspektif semua pihak. Saya biasanya mencari waktu yang tepat untuk membahas masalah secara pribadi, bukan di depan orang lain. Saya fokus pada mencari solusi yang dapat diterima semua pihak, meskipun terkadang ini berarti saya harus berkompromi lebih banyak.",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Apa yang membuatmu merasa terhubung secara mendalam dengan lingkunganmu?",
+                    sub: "Apakah kamu lebih memperhatikan detail sensorik (seperti suara, tekstur, atau rasa), atau makna dan simbolisme di balik pengalaman? Misalnya, saat berada di alam atau mengunjungi tempat baru.",
+                    followUp: "Mengapa aspek-aspek ini penting bagimu? Bagaimana cara ini memengaruhi bagaimana kamu mengingat dan menghargai pengalaman?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu mendekati proses pembelajaran dan pengembangan keterampilan baru?",
+                    sub: "Apakah kamu lebih suka belajar melalui instruksi langkah demi langkah dan latihan praktis, atau dengan memahami konsep dasar dan mengeksplorasi sendiri? Pikirkan tentang keterampilan terakhir yang kamu pelajari.",
+                    followUp: "Mengapa pendekatan ini efektif untukmu? Bagaimana pengalaman pendidikan masa lalumu membentuk gaya belajarmu saat ini?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu memprioritaskan dan mengelola energimu sehari-hari?",
+                    sub: "Aktivitas apa yang mengisi energimu dan mana yang menguras? Bagaimana kamu menyeimbangkan kebutuhan untuk produktivitas dengan kebutuhan untuk pemulihan dan refleksi?",
+                    followUp: "Bagaimana kamu menemukan pola ini dalam dirimu? Apakah ada perubahan signifikan dalam cara kamu mengelola energi sepanjang hidupmu?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu memandang dan merencanakan masa depanmu?",
+                    sub: "Seberapa jauh ke depan kamu biasanya merencanakan? Apakah kamu memiliki visi jangka panjang yang jelas, atau lebih fokus pada fleksibilitas dan merespons peluang saat muncul?",
+                    followUp: "Apa yang membuatmu nyaman dengan orientasi waktu ini? Bagaimana pandanganmu tentang masa depan memengaruhi keputusan yang kamu buat hari ini?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu merespons aturan, tradisi, dan otoritas?",
+                    sub: "Apakah kamu cenderung menghormati dan mengikuti struktur yang ada, atau kamu lebih suka mempertanyakan dan potensial mengubahnya? Pikirkan tentang aturan di tempat kerja, tradisi keluarga, atau norma sosial.",
+                    followUp: "Mengapa kamu memiliki kecenderungan ini? Pengalaman apa yang membentuk sikapmu terhadap aturan dan otoritas?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu memandang dan mengelola ketidaksempurnaan dalam dirimu dan orang lain?",
+                    sub: "Apakah kamu cenderung fokus pada perbaikan dan pengembangan, atau lebih menerima dan mengakomodasi kekurangan? Bagaimana kamu merespons kritik dan kegagalan?",
+                    followUp: "Mengapa kamu mengambil pendekatan ini? Bagaimana pengalamanmu dengan kesalahan dan kegagalan membentuk perspektifmu?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu membuat keputusan saat dihadapkan dengan banyak pilihan?",
+                    sub: "Pikirkan tentang situasi dengan banyak opsi, seperti memilih karir, tempat tinggal, atau bahkan restoran dengan menu panjang. Apa proses internalmu untuk mempersempit dan memilih?",
+                    followUp: "Mengapa proses ini bekerja untukmu? Pernahkah kamu mengalami keraguan setelah keputusan, dan bagaimana kamu mengatasinya?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Bagaimana kamu memahami dan memproses informasi baru yang kompleks?",
+                    sub: "Saat mempelajari topik baru yang rumit, apakah kamu lebih suka memecahnya menjadi bagian-bagian konkret, atau mencari gambaran besar dan tema utama terlebih dahulu?",
+                    followUp: "Mengapa pendekatan ini efektif untuk cara berpikirmu? Bagaimana ini memengaruhi bidang minat dan keahlianmu?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                },
+                {
+                    main: "Apa yang membuatmu merasa hidupmu bermakna dan memuaskan?",
+                    sub: "Sumber nilai dan tujuan apa yang paling penting bagimu? Apakah itu pencapaian personal, hubungan yang dalam, kreativitas, kontribusi sosial, atau sesuatu yang lain?",
+                    followUp: "Bagaimana nilai-nilai ini berkembang dalam hidupmu? Adakah momen penting atau pengalaman transformatif yang membentuk apa yang kamu anggap bermakna?",
+                    exampleMain: "",
+                    exampleFollowUp: ""
+                }
+            ];
+
+            let currentQuestionIndex = 0;
+            let isFollowUpActive = false;
+            const userAnswers = Array(questions.length * 2).fill(''); 
+
+            const disclaimerModal = document.getElementById("disclaimer-modal");
+            const consentCheck = document.getElementById("consent-check");
+            const startTestBtn = document.getElementById("start-test-btn");
+            const mainContent = document.getElementById("main-content");
+            const toggleTipsBtn = document.getElementById("toggle-tips-btn");
+            const tipsContent = document.getElementById("tips-content");
+            const questionCarousel = document.getElementById("question-carousel");
+            const currentAnswerTextarea = document.getElementById("current-answer");
+            const charCounter = document.getElementById("char-counter");
+            const prevButton = document.getElementById("prev-btn");
+            const nextButton = document.getElementById("next-btn");
+            const submitButton = document.getElementById("submit-btn");
+            const resetButton = document.getElementById("reset-btn");
+            const copyButton = document.getElementById("copy-btn");
+            const questionsSection = document.getElementById("questions-section");
+            const resultsSection = document.getElementById("results-section");
+            const userAnswersElement = document.getElementById("user-answers");
+            const aiPromptElement = document.getElementById("ai-prompt");
+            const progressFill = document.getElementById("progress-fill");
+            const questionCounter = document.getElementById("question-counter");
+
+            currentAnswerTextarea.addEventListener("input", function() {
+                const charCount = this.value.length;
+                charCounter.textContent = `${charCount} karakter`;
+                
+                if (charCount < 20) {
+                    charCounter.classList.remove("text-green-500");
+                    charCounter.classList.add("text-gray-500");
+                } else {
+                    charCounter.classList.remove("text-gray-500");
+                    charCounter.classList.add("text-green-500");
+                }
+            });
+
+            consentCheck.addEventListener("change", function() {
+                if (this.checked) {
+                    startTestBtn.disabled = false;
+                    startTestBtn.classList.remove("bg-gray-300", "text-gray-500", "cursor-not-allowed");
+                    startTestBtn.classList.add("bg-primary-600", "hover:bg-primary-700", "text-white");
+                } else {
+                    startTestBtn.disabled = true;
+                    startTestBtn.classList.remove("bg-primary-600", "hover:bg-primary-700", "text-white");
+                    startTestBtn.classList.add("bg-gray-300", "text-gray-500", "cursor-not-allowed");
+                }
+            });
+
+            startTestBtn.addEventListener("click", () => {
+                disclaimerModal.classList.add("hidden");
+                mainContent.classList.remove("hidden");
+                initQuestionCarousel();
+            });
+
+            toggleTipsBtn.addEventListener("click", function() {
+                if (tipsContent.classList.contains("hidden")) {
+                    tipsContent.classList.remove("hidden");
+                    this.textContent = "Sembunyikan Tips";
+                } else {
+                    tipsContent.classList.add("hidden");
+                    this.textContent = "Lihat Tips Menjawab";
+                }
+            });
+
+            function initQuestionCarousel() {
+                questionCarousel.innerHTML = "";
+                
+                updateQuestionDisplay();
+                
+                updateQuestionCounter();
+                updateProgressBar();
+                updatePlaceholder();
+                currentAnswerTextarea.value = userAnswers[getAnswerIndex()];
+                currentAnswerTextarea.focus();
+                updateCharCounter();
+            }
+
+            function updateCharCounter() {
+                const charCount = currentAnswerTextarea.value.length;
+                charCounter.textContent = `${charCount} karakter`;
+                
+                if (charCount < 20) {
+                    charCounter.classList.remove("text-green-500");
+                    charCounter.classList.add("text-gray-500");
+                } else {
+                    charCounter.classList.remove("text-gray-500");
+                    charCounter.classList.add("text-green-500");
+                }
+            }
+
+            function updateQuestionDisplay() {
+                const question = questions[currentQuestionIndex];
+                
+                questionCarousel.innerHTML = "";
+                
+                const questionElement = document.createElement("div");
+                questionElement.className = "question active";
+                
+                const mainQuestion = document.createElement("div");
+                mainQuestion.className = "text-lg font-medium mb-3 text-primary-800";
+                mainQuestion.textContent = question.main;
+                
+                const subQuestions = document.createElement("div");
+                subQuestions.className = "text-gray-600";
+                subQuestions.textContent = isFollowUpActive ? question.followUp : question.sub;
+                
+                questionElement.appendChild(mainQuestion);
+                questionElement.appendChild(subQuestions);
+                
+                questionCarousel.appendChild(questionElement);
+            }
+
+            function updatePlaceholder() {
+                const question = questions[currentQuestionIndex];
+                const placeholder = isFollowUpActive ? 
+                    question.exampleFollowUp : 
+                    question.exampleMain;
+                
+                currentAnswerTextarea.placeholder = `${placeholder}\n\nTulis jawabanmu sendiri di sini...`;
+            }
+
+            function getAnswerIndex() {
+                return currentQuestionIndex * 2 + (isFollowUpActive ? 1 : 0);
+            }
+
+            function updateQuestionCounter() {
+                const totalQuestions = questions.length;
+                const currentMainQuestion = currentQuestionIndex + 1;
+                const part = isFollowUpActive ? "B" : "A";
+                
+                questionCounter.textContent = `Pertanyaan ${currentMainQuestion} dari ${totalQuestions} - Bagian ${part}`;
+            }
+
+            function updateProgressBar() {
+                const totalSteps = questions.length * 2; 
+                const currentStep = currentQuestionIndex * 2 + (isFollowUpActive ? 1 : 0) + 1;
+                const progress = (currentStep / totalSteps) * 100;
+                
+                progressFill.style.width = `${progress}%`;
+            }
+
+            function goToPrevious() {
+                userAnswers[getAnswerIndex()] = currentAnswerTextarea.value.trim();
+                
+                if (isFollowUpActive) {
+                    isFollowUpActive = false;
+                } else if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    isFollowUpActive = true;
+                }
+                
+                updateQuestionDisplay();
+                updateQuestionCounter();
+                updateProgressBar();
+                updateNavigationButtons();
+                updatePlaceholder();
+                
+                currentAnswerTextarea.value = userAnswers[getAnswerIndex()];
+                currentAnswerTextarea.focus();
+                updateCharCounter();
+            }
+
+            function goToNext() {
+                if (currentAnswerTextarea.value.trim().length < 20) {
+                    alert("Mohon berikan jawaban yang lebih detail (minimal 20 karakter).");
+                    return;
+                }
+                
+                userAnswers[getAnswerIndex()] = currentAnswerTextarea.value.trim();
+                
+                if (!isFollowUpActive) {
+                    isFollowUpActive = true;
+                } else if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    isFollowUpActive = false;
+                }
+                
+                updateQuestionDisplay();
+                updateQuestionCounter();
+                updateProgressBar();
+                updateNavigationButtons();
+                updatePlaceholder();
+                
+                currentAnswerTextarea.value = userAnswers[getAnswerIndex()];
+                currentAnswerTextarea.focus();
+                updateCharCounter();
+            }
+
+            function updateNavigationButtons() {
+                prevButton.disabled = (currentQuestionIndex === 0 && !isFollowUpActive);
+                
+                if (prevButton.disabled) {
+                    prevButton.classList.add("bg-gray-300", "text-gray-500", "cursor-not-allowed");
+                    prevButton.classList.remove("bg-gray-600", "hover:bg-gray-700");
+                } else {
+                    prevButton.classList.remove("bg-gray-300", "text-gray-500", "cursor-not-allowed");
+                    prevButton.classList.add("bg-gray-600", "hover:bg-gray-700");
+                }
+                
+                if (currentQuestionIndex === questions.length - 1 && isFollowUpActive) {
+                    nextButton.classList.add("hidden");
+                    submitButton.classList.remove("hidden");
+                } else {
+                    nextButton.classList.remove("hidden");
+                    submitButton.classList.add("hidden");
+                }
+            }
+
+            function generateAnalysisPrompt() {
+                userAnswers[getAnswerIndex()] = currentAnswerTextarea.value.trim();
+                
+                for (let i = 0; i < questions.length * 2; i++) {
+                    if (userAnswers[i].length < 20) {
+                        const questionIndex = Math.floor(i / 2);
+                        const isFollowUp = i % 2 === 1;
+                        
+                        alert(`Mohon berikan jawaban yang lebih detail untuk pertanyaan ${questionIndex + 1}${isFollowUp ? ' (bagian lanjutan)' : ''}.`);
+                        
+                        currentQuestionIndex = questionIndex;
+                        isFollowUpActive = isFollowUp;
+                        
+                        updateQuestionDisplay();
+                        updateQuestionCounter();
+                        updateProgressBar();
+                        updateNavigationButtons();
+                        updatePlaceholder();
+                        
+                        currentAnswerTextarea.value = userAnswers[getAnswerIndex()];
+                        currentAnswerTextarea.focus();
+                        updateCharCounter();
+                        
+                        return;
+                    }
+                }
+                
+                displayUserAnswers();
+                
+                const aiPrompt = createAIPrompt();
+                aiPromptElement.textContent = aiPrompt;
+                
+                questionsSection.classList.add("hidden");
+                resultsSection.classList.remove("hidden");
+                
+                resultsSection.scrollIntoView({ behavior: "smooth" });
+            }
+
+            function displayUserAnswers() {
+                userAnswersElement.innerHTML = "";
+                
+                for (let i = 0; i < questions.length; i++) {
+                    const answerItem = document.createElement("div");
+                    answerItem.className = "mb-6 pb-6 border-b border-gray-200 last:border-0";
+                    
+                    const questionText = document.createElement("div");
+                    questionText.className = "font-semibold mb-2 text-primary-700";
+                    questionText.textContent = `${i + 1}. ${questions[i].main}`;
+                    
+                    const mainAnswerText = document.createElement("div");
+                    mainAnswerText.className = "text-gray-700 mb-3";
+                    mainAnswerText.textContent = userAnswers[i * 2];
+                    
+                    const followUpLabel = document.createElement("div");
+                    followUpLabel.className = "font-medium text-gray-600 mb-1";
+                    followUpLabel.textContent = questions[i].followUp;
+                    
+                    const followUpAnswerText = document.createElement("div");
+                    followUpAnswerText.className = "text-gray-700";
+                    followUpAnswerText.textContent = userAnswers[i * 2 + 1];
+                    
+                    answerItem.appendChild(questionText);
+                    answerItem.appendChild(mainAnswerText);
+                    answerItem.appendChild(followUpLabel);
+                    answerItem.appendChild(followUpAnswerText);
+                    
+                    userAnswersElement.appendChild(answerItem);
+                }
+            }
+
+            function createAIPrompt() {
+                let prompt = `# ANALISIS KEPRIBADIAN MBTI
+
+## PROFIL RESPONDEN
+Berikut adalah jawaban saya terhadap serangkaian pertanyaan introspektif. analisis ini secara objektif tanpa bias atau stereotip.
+
+`;
+
+                for (let i = 0; i < questions.length; i++) {
+                    prompt += `### PERTANYAAN ${i + 1}: ${questions[i].main}\n`;
+                    prompt += `**Jawaban Utama:** ${userAnswers[i * 2]}\n\n`;
+                    prompt += `**${questions[i].followUp}**\n`;
+                    prompt += `**Jawaban Lanjutan:** ${userAnswers[i * 2 + 1]}\n\n`;
+                }
+
+                prompt += `## INSTRUKSI ANALISIS
+
+### 1. TIPE MBTI
+- Tentukan tipe MBTI saya, berdasarkan jawaban di atas
+- Jelaskan alasan penentuan setiap dimensi dengan merujuk pada jawaban spesifik saya:
+  * E/I: Bagaimana saya mendapatkan dan mengarahkan energi
+  * S/N: Bagaimana saya mengumpulkan informasi dan memahami dunia
+  * T/F: Bagaimana saya membuat keputusan
+  * J/P: Bagaimana saya mengatur hidup dan berinteraksi dengan dunia luar
+- Berikan persentase keyakinan untuk setiap dimensi (contoh: 70% Introvert vs 30% Ekstrovert)
+
+### 2. FUNGSI KOGNITIF
+- Identifikasi susunan fungsi kognitif saya dari dominan hingga inferior
+- Jelaskan bagaimana fungsi-fungsi ini terlihat dalam jawaban saya dengan contoh spesifik
+- Analisis dinamika antara fungsi dominan dan sekunder saya
+- Jelaskan bagaimana fungsi inferior mungkin muncul dalam situasi stres
+
+### 3. DINAMIKA INTERPERSONAL
+- Jelaskan bagaimana saya cenderung berinteraksi dalam hubungan dekat
+- Analisis gaya komunikasi dan potensi area konflik saya
+- Identifikasi tipe kepribadian yang mungkin kompatibel atau menantang bagi saya
+
+### 4. KESIMPULAN
+- Berikan ringkasan holistik tentang pola kepribadian saya
+- Hindari generalisasi dan stereotip, fokus pada pola unik yang muncul dari jawaban saya
+- Tekankan bahwa analisis ini adalah alat refleksi diri, bukan label permanen
+
+Mohon analisis yang mendalam dan personal berdasarkan jawaban spesifik saya, bukan hanya deskripsi umum tentang tipe MBTI.`;
+
+                return prompt;
+            }
+
+            function resetForm() {
+                currentQuestionIndex = 0;
+                isFollowUpActive = false;
+                userAnswers.fill("");
+                
+                initQuestionCarousel();
+                resultsSection.classList.add("hidden");
+                questionsSection.classList.remove("hidden");
+                
+                updateNavigationButtons();
+            }
+
+            function copyToClipboard() {
+                const textToCopy = aiPromptElement.textContent;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => showCopySuccess())
+                        .catch(err => {
+                            console.error("Failed to copy text: ", err);
+                            fallbackCopyToClipboard(textToCopy);
+                        });
+                } else {
+                    fallbackCopyToClipboard(textToCopy);
+                }
+            }
+
+            function fallbackCopyToClipboard(text) {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                
+                textarea.style.position = "fixed";
+                textarea.style.left = "-999999px";
+                textarea.style.top = "-999999px";
+                
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand("copy");
+                    if (successful) {
+                        showCopySuccess();
+                    } else {
+                        console.error("Failed to copy text");
+                    }
+                } catch (err) {
+                    console.error("Failed to copy text: ", err);
+                }
+                
+                document.body.removeChild(textarea);
+            }
+
+            function showCopySuccess() {
+                let notification = document.querySelector(".copy-success");
+                if (!notification) {
+                    notification = document.createElement("div");
+                    notification.className = "fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg transform -translate-y-10 opacity-0 transition-all duration-300 copy-success";
+                    notification.textContent = "Copied to clipboard!";
+                    document.body.appendChild(notification);
+                }
+                
+                setTimeout(() => {
+                    notification.classList.remove("opacity-0", "-translate-y-10");
+                    notification.classList.add("opacity-100", "translate-y-0");
+                }, 10);
+                
+                setTimeout(() => {
+                    notification.classList.remove("opacity-100", "translate-y-0");
+                    notification.classList.add("opacity-0", "-translate-y-10");
+                }, 2000);
+            }
+
+            prevButton.addEventListener("click", goToPrevious);
+            nextButton.addEventListener("click", goToNext);
+            submitButton.addEventListener("click", generateAnalysisPrompt);
+            resetButton.addEventListener("click", resetForm);
+            copyButton.addEventListener("click", copyToClipboard);
+        });
+    </script>
+</body>
+</html>
